@@ -77,11 +77,19 @@ const raspividArgs = [
   config.bitrate,
   '-o',
   '-'];
-const raspivid = spawn('raspivid', raspividArgs, {stdio: 'pipe'});
-raspivid.on('exit', (code, signal) => {
-  console.log(`raspivid exited with ${code}`);
-  process.exit(code);
-});
+const raspivid = spawn('raspivid', raspividArgs, {stdio: 'pipe'})
+  .on('error', (error) => {
+    console.log(`raspivid exiting with error: ${error}`);
+    process.exit(1);
+  })
+  .on('close', (code) => {
+    console.log(`raspivid closed with ${code}`);
+    process.exit(code);
+  })
+  .on('exit', (code) => {
+    console.log(`raspivid exited with ${code}`);
+    process.exit(code);
+  });
 
 // Spawn the 'ffmpeg' process, piping 'raspivid' to 'ffmpeg'
 const ffmpegArgs = [
@@ -94,11 +102,19 @@ const ffmpegArgs = [
   '-vcodec',
   'png',
   '-'];
-const ffmpeg = spawn('ffmpeg', ffmpegArgs, {stdio: [raspivid.stdout, 'pipe', 'pipe']});
-ffmpeg.on('exit', (code, signal) => {
-  console.log(`ffmpeg exited with ${code}`);
-  process.exit(code);
-});
+const ffmpeg = spawn('ffmpeg', ffmpegArgs, {stdio: [raspivid.stdout, 'pipe', 'pipe']})
+  .on('error', (error) => {
+    console.log(`ffmpeg exiting with error: ${error}`);
+    process.exit(1);
+  })
+  .on('close', (code) => {
+    console.log(`ffmpeg closed with ${code}`);
+    process.exit(code);
+  })
+  .on('exit', (code) => {
+    console.log(`ffmpeg exited with ${code}`);
+    process.exit(code);
+  });
 
 // Start the PNG image streamer, parsing the output of the ffmpeg stream
 new PngStreamer(ffmpeg, (err, png) => {
