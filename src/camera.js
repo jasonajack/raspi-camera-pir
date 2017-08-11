@@ -78,6 +78,10 @@ const raspividArgs = [
   '-o',
   '-'];
 const raspivid = spawn('raspivid', raspividArgs, {stdio: 'pipe'});
+raspivid.on('exit', (code, signal) => {
+  console.log(`raspivid exited with ${code}`);
+  process.exit(code);
+});
 
 // Spawn the 'ffmpeg' process, piping 'raspivid' to 'ffmpeg'
 const ffmpegArgs = [
@@ -91,15 +95,17 @@ const ffmpegArgs = [
   'png',
   '-'];
 const ffmpeg = spawn('ffmpeg', ffmpegArgs, {stdio: [raspivid.stdout, 'pipe', 'pipe']});
+ffmpeg.on('exit', (code, signal) => {
+  console.log(`ffmpeg exited with ${code}`);
+  process.exit(code);
+});
 
 // Start the PNG image streamer, parsing the output of the ffmpeg stream
 new PngStreamer(ffmpeg, (err, png) => {
   // Only continue if PIR is detecting motion
   if (inMotion && mongoCollection) {
-    var timestamp = Date.now();
-    console.log(`Writing a PNG (${png.length} bytes) on ${timestamp}.`);
-
     // Insert image into MongoDB
+    var timestamp = Date.now();
     mongoCollection.insert(
       {
         'timestamp': timestamp,
