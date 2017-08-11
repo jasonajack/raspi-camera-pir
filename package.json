@@ -1,0 +1,26 @@
+{
+  "name": "raspi-camera-pir",
+  "version": "0.1.0",
+  "description": "Raspberry Pi app using a camera and PIR motion sensor to feed images into MongoDB.",
+  "main": "src/camera.js",
+  "dependencies": {
+    "johnny-five": "^0.11.3",
+    "mongodb": "^2.2.30",
+    "png-streamer": "0.0.1",
+    "raspi-io": "^8.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonajack/raspi-camera-pir.git"
+  },
+  "author": "Jason Jack",
+  "license": "MIT",
+  "bugs": {
+    "url": "http://github.com/jasonajack/raspi-camera-pir/issues"
+  },
+  "homepage": "http://github.com/jasonajack/raspi-camera-pir#readme"
+}

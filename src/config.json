@@ -1,0 +1,8 @@
+{
+  "mongourl": "mongodb://kittycam-backend:27017/raspicam",
+  "rotation": "90",
+  "width": "1280",
+  "height": "720",
+  "fps": "30",
+  "bitrate": "10000000"
+}
