@@ -1,6 +1,6 @@
 # Raspberry Pi Camera/PIR Monitor
 
-Captures RaspiVid as PNG when motion is detected on the Raspi PIR and stores in MongoDB.  This requires a MongoDB server be installed somewhere accessible on the same network as the Pi.
+Captures RaspiVid as images when motion is detected on the Raspi PIR and stores in MongoDB.  This requires a MongoDB server be installed somewhere accessible on the same network as the Pi.
 
 # Building the Chassis
 
@@ -101,6 +101,12 @@ Follow the steps below to install the backend service to a fresh Raspberry Pi:
 
     ```bash
     ./install-systemd.sh
+    ```
+
+1. Alternatively you can run by hand:
+
+    ```bash
+    ./run.sh
     ```
 
 1. Verify the service is running:
