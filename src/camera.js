@@ -1,12 +1,11 @@
 'use strict'
 
 // Pull in modules to spawn child processes and start the PNG streamer
+const path = require('path');
 const fs = require('fs');
-const spawn = require('child_process').spawn;
-const PngStreamer = require('png-streamer');
 
 // Read in configuration file and get name of the image that is updating in the background
-const config = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+const config = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'config.json'), 'utf8'));
 
 // Johnny-Five for RPi
 const raspi = require('raspi-io');
@@ -59,82 +58,47 @@ MongoClient.connect(config.mongourl, function(err, db) {
   }
 });
 
-// Spawn the 'raspivid' process
-const raspividArgs = [
-  '-n',
-  '-ih',
-  '-t',
-  '0',
-  '-rot',
-  config.rotation,
-  '-w',
-  config.width,
-  '-h',
-  config.height,
-  '-fps',
-  config.fps,
-  '-b',
-  config.bitrate,
-  '-o',
-  '-'];
-const raspivid = spawn('raspivid', raspividArgs, {stdio: 'pipe'})
-  .on('error', (error) => {
-    console.log(`raspivid exiting with error: ${error}`);
-    process.exit(1);
-  })
-  .on('close', (code) => {
-    console.log(`raspivid closed with ${code}`);
-    process.exit(code);
-  })
-  .on('exit', (code) => {
-    console.log(`raspivid exited with ${code}`);
-    process.exit(code);
-  });
-
-// Spawn the 'ffmpeg' process, piping 'raspivid' to 'ffmpeg'
-const ffmpegArgs = [
-  '-i',
-  '-',
-  '-qscale:v',
-  '2',
-  '-f',
-  'image2pipe',
-  '-vcodec',
-  'png',
-  '-'];
-const ffmpeg = spawn('ffmpeg', ffmpegArgs, {stdio: [raspivid.stdout, 'pipe', 'pipe']})
-  .on('error', (error) => {
-    console.log(`ffmpeg exiting with error: ${error}`);
-    process.exit(1);
-  })
-  .on('close', (code) => {
-    console.log(`ffmpeg closed with ${code}`);
-    process.exit(code);
-  })
-  .on('exit', (code) => {
-    console.log(`ffmpeg exited with ${code}`);
-    process.exit(code);
-  });
-
-// Start the PNG image streamer, parsing the output of the ffmpeg stream
-new PngStreamer(ffmpeg, (err, png) => {
+// Watch the file and if it changes we'll trigger a write operation
+var imagesToWrite = [];
+setInterval(() => {
   // Only continue if PIR is detecting motion
-  if (inMotion && mongoCollection) {
-    // Insert image into MongoDB
-    var timestamp = Date.now();
-    mongoCollection.insert(
-      {
-        'timestamp': timestamp,
-        'image': png
-      }, (err, result) => {
-        if (err) {
-          console.log(`Encountered error when writing to MongoDB: ${err}`);
-        } else {
-          console.log(`Wrote image to MongoDB at timestamp: ${timestamp}`);
-        }
-      });
+  if (inMotion) {
+    fs.readFile(config.image, (err, image) => {
+      // Check for errors
+      var timestamp = Date.now();
+      if (err || image.length == 0) {
+        console.log(`${timestamp}: (ERROR) Image file not suitable for writing.`);
+        return;
+      }
+
+      // Insert image into queue; use the timestamp as the unique ID and store the raw image
+      // TODO: in some circumstances we might catch an image as it is being written; we need
+      //       a way of detecting and discarding this bad data.
+      //       I tried parsing the JPEGs each time but that seems to be very slow, so I'll
+      //       need to find a better way later.
+      console.log(`${timestamp}: Queueing up image of size ${image.length} bytes.`);
+      imagesToWrite.push({ '_id': timestamp, 'image': image });
+    });
   }
-});
+}, parseInt(1000 / parseInt(config.fps)));
+
+// Write to MongoDB on interval
+setInterval(() => {
+  // Only write if we're not currently collecting images, and if there are images in the queue
+  // and if we're connected to MongoDB
+  if (imagesToWrite.length > 0 && mongoCollection && !inMotion) {
+    // Insert all images into MongoDB
+    var insertManyQueue = imagesToWrite;
+    imagesToWrite = [];
+    mongoCollection.insertMany(insertManyQueue, (err, result) => {
+      if (err) {
+        console.log(`${Date.now()}: Encountered error when writing to MongoDB: ${err}`);
+      } else {
+        console.log(`${Date.now()}: Wrote ${insertManyQueue.length} images to MongoDB.`);
+      }
+    });
+  }
+}, parseInt(config.writeInterval));
 
 // Ctrl-C exit
 process.on('SIGINT', () => {

@@ -1,10 +1,9 @@
 [Unit]
-Description=Runs the Raspi Camera/PIR image service sending to MongoDB
+Description=Raspi Camera/PIR image service sending to MongoDB
 After=network.target
 
 [Service]
-WorkingDirectory=/usr/local/raspi-camera-pir
-ExecStart=/usr/bin/node src/camera.js src/config.json
+ExecStart=/usr/local/raspi-camera-pir/run.sh
 Restart=always
 RestartSec=5
 
