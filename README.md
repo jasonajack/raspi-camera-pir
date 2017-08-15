@@ -1,6 +1,6 @@
 # Raspberry Pi Camera/PIR Monitor
 
-Captures RaspiVid as PNG when motion is detected on the Raspi PIR and stores in MongoDB.  This requires a MongoDB server be installed somewhere accessible on the same network as the Pi.
+Captures RaspiVid as images when motion is detected on the Raspi PIR and stores in MongoDB.  This requires a MongoDB server be installed somewhere accessible on the same network as the Pi.
 
 # Building the Chassis
 
@@ -39,6 +39,12 @@ Follow the steps below to install the backend service to a fresh Raspberry Pi:
 
     ```bash
     sudo systemctl set-default multi-user.target
+    ```
+
+1. Install dependencies for the NodeJS service:
+
+    ```bash
+    ./install-ubuntu.sh
     ```
 
 1. Configure the WPA Supplicant service for your `wlan0` device to enable connecting to a WiFi network on boot:
@@ -101,6 +107,12 @@ Follow the steps below to install the backend service to a fresh Raspberry Pi:
 
     ```bash
     ./install-systemd.sh
+    ```
+
+1. Alternatively you can run by hand:
+
+    ```bash
+    ./run.sh
     ```
 
 1. Verify the service is running:
