@@ -1,17 +1,24 @@
-#!/bin/bash -x
+#!/bin/bash
 cd $(dirname ${0})
 
 # Read in variables from config.json
-readvar() { cat config.json | python -c "import sys, json; print json.load(sys.stdin)['${1}']"; }
+readvar() { cat src/config.json | python -c "import sys, json; print json.load(sys.stdin)['${1}']"; }
 mongourl=$(readvar 'mongourl')
-expireTimeMillis=$(readvar 'expireTimeMillis')
-expireSizeGB=$(readvar 'expireSizeGB')
-expireSizeGB=$((expireSizeGB * 1024 * 1024))
+expireTimeSeconds=$(readvar 'expireTimeSeconds')
+expireSizeMB=$(readvar 'expireSizeMB')
+expireSizeMB=$((expireSizeMB * 1024 * 1024))
 
 # Cleanup database of old stuff
 mongoCmd() { mongo --quiet ${mongourl} -eval "${@}"; }
 dbSize=$(mongoCmd 'db.images.dataSize()')
-if [[ ${dbSize} -gt ${expireSizeGB} ]]; then
+echo "Current database size: ${dbSize} bytes."
+if [[ ${dbSize} -gt ${expireSizeMB} ]]; then
+  # Calculate oldest timestamp in millis
+  oldest=$(date +%s)
+  oldest=$(((oldest - expireTimeSeconds) * 1000))
+  echo "Database too big, culling data older than ${oldest}."
+
+  # Cull oldest entries
   mongoCmd "db.images.remove({'_id': {\$lt: $oldest}})"
 fi
 

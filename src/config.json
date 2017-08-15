@@ -7,6 +7,6 @@
   "bitrate": "10000000",
   "image": "/dev/shm/raspivid.jpg",
   "writeInterval": "10000",
-  "expireTimeMillis": "86400000",
-  "expireSizeGB": "100"
+  "expireTimeSeconds": "86400",
+  "expireSizeMB": "102400"
 }
