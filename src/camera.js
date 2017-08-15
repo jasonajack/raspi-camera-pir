@@ -60,9 +60,10 @@ MongoClient.connect(config.mongourl, function(err, db) {
 
 // Watch the file and if it changes we'll trigger a write operation
 var imagesToWrite = [];
+const maxImagesInBuffer = parseInt(config.maxImagesInBuffer);
 setInterval(() => {
   // Only continue if PIR is detecting motion
-  if (inMotion) {
+  if (inMotion && imagesToWrite.length < maxImagesInBuffer) {
     fs.readFile(config.image, (err, image) => {
       // Check for errors
       var timestamp = Date.now();

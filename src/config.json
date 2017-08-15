@@ -6,6 +6,7 @@
   "fps": "30",
   "bitrate": "10000000",
   "image": "/dev/shm/raspivid.jpg",
+  "maxImagesInBuffer": "9000",
   "writeInterval": "10000",
   "expireTimeSeconds": "86400",
   "expireSizeMB": "102400"
